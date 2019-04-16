@@ -1,40 +1,63 @@
 import numpy as np
 import os
 import cv2
-
-def recreate_image(float_image):
+import copy
+import random
+import re
+def recreate_image(x):
     """
         Recreates images from a torch Tensor, sort of reverse preprocessing
 
     Args:
-        float_image (np.ndarray): N,H,W,C  Image to recreate
+        x (np.array): C,H,W format Image to recreate
 
     returns:
-        recreated_im (numpy arr): Recreated image in array
+        recreated_im (numpy arr): H,W,C format Recreated image in array
     """
-    reverse_mean = np.array([[[[-0.485, -0.456, -0.406]]]])  # 1，1，1，3
-    reverse_std = np.array([[[[1/0.229, 1/0.224, 1/0.225]]]])
-    float_image /= reverse_std
-    float_image -= reverse_mean
-    float_image[float_image > 1] = 1
-    float_image[float_image < 0] = 0
-    recreated_im = np.round(float_image * 255)
+    reverse_mean = [-0.485, -0.456, -0.406]
+    reverse_std = [1/0.229, 1/0.224, 1/0.225]
+    in_channel = x.shape[-1]
+    recreated_im = copy.copy(x)  # C, H, W
+    if in_channel == 3:
+        for c in range(in_channel):
+            recreated_im[:, :, c] /= reverse_std[c]
+            recreated_im[:, :, c] -= reverse_mean[c]
+    elif in_channel == 1:
+        recreated_im[:, :, 0] /= reverse_std[1]
+        recreated_im[:, :, 0] -= reverse_mean[1]
+    recreated_im[recreated_im > 1] = 1
+    recreated_im[recreated_im < 0] = 0
+    recreated_im = np.round(recreated_im * 255)
 
-    recreated_im = np.uint8(recreated_im)  # N, H, W, C
+    recreated_im = np.uint8(recreated_im)  # H, W, C
     return recreated_im
 
-def walk_recreate(folder, output_dir):
 
-    for sub_folder in os.listdir(folder):
 
-        npy_file = folder + '/' + sub_folder + '/' + "train.npy"
-        array = np.load(npy_file)
-        orig_images = recreate_image(array)
-        target_folder = output_dir + "/" + sub_folder
-        os.makedirs(target_folder, exist_ok=True)
-        for idx, orig_image in enumerate(orig_images):
-            cv2.imwrite(target_folder + "/{}.png".format(idx), orig_image)
-        print("write {} done".format(sub_folder))
+def recreate_npy(npy_path, output_dir):
+    adv_images = np.load(npy_path)["adv_images"]
+    select_idx = random.sample(list(np.arange(adv_images.shape[0])), 10)
+    adv_images = adv_images[select_idx]
+    for idx, adv_image in enumerate(adv_images):
+        adv_image = recreate_image(adv_image)
+        target_path = output_dir + "/{}.png".format(idx)
+        cv2.imwrite(target_path, adv_image)
+        print("write {} done".format(target_path))
 
 if __name__ == "__main__":
-    walk_recreate("/home1/machen/dataset/CIFAR-10/split_data/train", "/home1/machen/dataset/CIFAR-10/output/images")
+    extract_noise_type_pattern = re.compile("(.*?)_untargeted_train.npz")
+    for dataset in ["MNIST", "F-MNIST",]:
+        ROOT_DIR_PATH = "/home1/machen/dataset/{}/adversarial_images/".format(dataset)
+
+        for arch in os.listdir(ROOT_DIR_PATH):
+            for npy_path in os.listdir(ROOT_DIR_PATH + "/" +arch):
+                if npy_path.endswith("npz") and npy_path.endswith("train.npz"):
+                    ma = extract_noise_type_pattern.match(npy_path)
+                    noise_type = ma.group(1)
+                    npy_path = ROOT_DIR_PATH + "/" + arch + "/" + npy_path
+                    target_folder = npy_path.replace("adversarial_images", "adv_images_png")
+                    target_folder = os.path.dirname(target_folder) + "/" + noise_type
+                    os.makedirs(target_folder, exist_ok=True)
+                    if dataset in ["MNIST", "F-MNIST"]:
+                        npy_path = npy_path.replace("adversarial_images","processed_adv_img")
+                    recreate_npy(npy_path, target_folder)

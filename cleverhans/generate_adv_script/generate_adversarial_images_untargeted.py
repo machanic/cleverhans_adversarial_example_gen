@@ -71,9 +71,9 @@ def generate_adv_images(gpu, attack_algo, dataset, source_data_dir, train_start=
     output_dir = DATASET_ADV_OUTPUT[args.dataset] + "/" + args.arch
     os.makedirs(output_dir, exist_ok=True)
     report = AccuracyReport()
-    if (os.path.exists(output_dir + "/{0}_untargeted_train.npz".format(attack_algo)) and
-        os.path.exists(output_dir + "/{0}_untargeted_test.npz".format(attack_algo))):
-        return report
+    # if (os.path.exists(output_dir + "/{0}_untargeted_train.npz".format(attack_algo)) and
+    #     os.path.exists(output_dir + "/{0}_untargeted_test.npz".format(attack_algo))):
+    #     return report
 
 
     # Object used to keep track of (and return) key accuracies

@@ -53,10 +53,12 @@ META_ATTACKER_INDEX = ["clean", "FGSM", "MI_FGSM_L_infinity", "BIM_L_infinity", 
                   "jsma","EAD","spatial_transform","VAT","max_confidence", "semantic", "LBFGS"]
 
 
-META_ATTACKER_PART_I = ["clean", "FGSM", "MI_FGSM_L_infinity", "BIM_L_infinity", "PGD_L_infinity", "SPSA", "EAD", "spatial_transform",
-                        "max_confidence", "semantic"]
-META_ATTACKER_PART_II = ["clean", "CW_L2", "deep_fool_L2", "newton_fool", "jsma","LBFGS", "VAT"]
+META_ATTACKER_PART_I = ["clean", "FGSM", "MI_FGSM_L_infinity", "BIM_L_infinity", "PGD_L_infinity","CW_L2","jsma", "SPSA",
+                        "VAT", "max_confidence"]
+META_ATTACKER_PART_II = ["clean", "EAD",  "semantic","spatial_transform", "deep_fool_L2", "newton_fool"]
 
+ADV_CLASS_PART_I = [0,1,2,3,4]
+ADV_CLASS_PART_II = [5,6,7,8,9]
 
 
 # MI_FGSM_L_infinity 特点: 彩色斑斓

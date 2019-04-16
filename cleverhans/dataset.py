@@ -389,17 +389,18 @@ def data_mnist(datadir=tempfile.gettempdir(), train_start=0,
     assert isinstance(test_end, int)
 
     X_train = download_and_parse_mnist_file(
-        'train-images-idx3-ubyte.gz', datadir=datadir) / 255.
+        'train-images-idx3-ubyte.gz', datadir=datadir)
     Y_train = download_and_parse_mnist_file(
         'train-labels-idx1-ubyte.gz', datadir=datadir)
     X_test = download_and_parse_mnist_file(
-        't10k-images-idx3-ubyte.gz', datadir=datadir) / 255.
+        't10k-images-idx3-ubyte.gz', datadir=datadir)
     Y_test = download_and_parse_mnist_file(
         't10k-labels-idx1-ubyte.gz', datadir=datadir)
 
     X_train = np.expand_dims(X_train, -1)
     X_test = np.expand_dims(X_test, -1)
-
+    X_train = convert_image(X_train)
+    X_test = convert_image(X_test)
     X_train = X_train[train_start:train_end]
     Y_train = Y_train[train_start:train_end]
     X_test = X_test[test_start:test_end]
@@ -514,8 +515,12 @@ def transform_image(preprocessor, np_image):
 def convert_image(np_image):
     np_image = np_image.astype(np.float32)
     np_image = np.divide(np_image, 255.0)
-    mean = np.array([0.485, 0.456, 0.406])[None][None][None]
-    std = np.array([0.229, 0.224, 0.225])[None][None][None]
+    if np_image.shape[-1] == 1:
+        mean = np.array([0.456])[None][None][None]  # 单通道的时候用中间这个数字作为均值
+        std = np.array([0.224])[None][None][None]
+    elif np_image.shape[-1] == 3:
+        mean = np.array([0.485, 0.456, 0.406])[None][None][None]
+        std = np.array([0.229, 0.224, 0.225])[None][None][None]
     np_image = (np_image - mean) / std
     return np_image
 
