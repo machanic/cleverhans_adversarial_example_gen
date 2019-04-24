@@ -18,7 +18,7 @@ from tensorflow.python.platform import app, flags
 from cleverhans.model_zoo.all_convolutional import ModelAllConvolutional
 from cleverhans.utils import set_log_level, to_categorical
 from cleverhans.utils_tf import model_eval
-from cleverhans.dataset import CIFAR10
+from cleverhans.dataset import CIFAR
 import numpy as np
 
 FLAGS = flags.FLAGS
@@ -33,8 +33,8 @@ def main(argv):
         print('No model found')
         sys.exit()
     source_data_dir = "/home1/machen/dataset/CIFAR-10/cifar-10-batches-py"
-    cifar = CIFAR10(data_dir=source_data_dir, train_start=0, train_end=60000,
-                    test_start=0, test_end=10000)
+    cifar = CIFAR(data_dir=source_data_dir, train_start=0, train_end=60000,
+                  test_start=0, test_end=10000)
 
     nb_classes = 10
     X_test = cifar.x_test

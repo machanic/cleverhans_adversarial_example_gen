@@ -11,7 +11,7 @@ from cleverhans.attacks import Attack
 from cleverhans.model import Model, wrapper_warning_logits, CallableModelWrapper
 from cleverhans.augmentation import random_horizontal_flip, random_shift
 from tensorflow.python.platform import app, flags
-from cleverhans.dataset import CIFAR10
+from cleverhans.dataset import CIFAR
 from cleverhans.loss import CrossEntropy
 from cleverhans.model_zoo.all_convolutional import ModelAllConvolutional
 from cleverhans.train import train
@@ -529,8 +529,8 @@ def generate_CIFAR10_adv(attacker_name, train_start=0, train_end=60000, test_sta
     config_args["gpu_options"] = tf.GPUOptions(allow_growth=True)
     sess = tf.Session(config=tf.ConfigProto(**config_args))
     # Get CIFAR10 data
-    data = CIFAR10(train_start=train_start, train_end=train_end,
-                   test_start=test_start, test_end=test_end)
+    data = CIFAR(train_start=train_start, train_end=train_end,
+                 test_start=test_start, test_end=test_end)
     dataset_size = data.x_train.shape[0]
     dataset_train = data.to_tensorflow()[0]
     dataset_train = dataset_train.map(

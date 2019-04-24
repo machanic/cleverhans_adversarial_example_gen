@@ -17,7 +17,7 @@ from tensorflow.python.platform import app, flags
 from cleverhans.utils import set_log_level, to_categorical, safe_zip
 from cleverhans.utils_tf import model_eval
 from cleverhans import serial
-from cleverhans.dataset import CIFAR10, Factory
+from cleverhans.dataset import CIFAR, Factory
 from cleverhans.model_zoo.madry_lab_challenges.cifar10_model import make_wresnet
 
 FLAGS = flags.FLAGS
@@ -55,7 +55,7 @@ def main(argv):
             assert var1_found, var1.name
         assert all(found)
 
-        model2.dataset_factory = Factory(CIFAR10, {"max_val": 255})
+        model2.dataset_factory = Factory(CIFAR, {"max_val": 255})
 
         serial.save("model.joblib", model2)
 

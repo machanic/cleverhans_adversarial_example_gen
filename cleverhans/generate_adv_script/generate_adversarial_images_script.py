@@ -20,7 +20,7 @@ from cleverhans.augmentation import random_horizontal_flip, random_shift
 from cleverhans.compat import flags
 # from tensorflow.python.platform import flags
 from cleverhans.generate_adv_script.config import DATASET_INCHANNELS, DATASET_ADV_OUTPUT,DATASET_SOURCE_PATH,TF_CLEAN_IMAGE_MODEL_PATH
-from cleverhans.dataset import CIFAR10, MNIST, CIFAR100, ImageNet, SVHN
+from cleverhans.dataset import CIFAR10, MNIST, CIFAR100, ImageNet, SVHN, AWA2, CUB200_2011
 from cleverhans.loss import CrossEntropy
 from cleverhans.model_zoo.shallow_CNN import Shallow10ConvLayersConv, Shallow4ConvLayersConv
 from cleverhans.model_zoo.vgg import VGG16, VGG16Small
@@ -94,7 +94,7 @@ def generate_adv_images(gpu, attack_algo, dataset, source_data_dir, train_start=
     # Get CIFAR10 data
     if dataset == "CIFAR10":
         data = CIFAR10(data_dir=source_data_dir, train_start=train_start, train_end=train_end,
-                       test_start=test_start, test_end=test_end)
+                     test_start=test_start, test_end=test_end)
     elif dataset == "CIFAR100":
         data = CIFAR100(data_dir=source_data_dir, train_start=train_start, train_end=train_end,
                        test_start=test_start, test_end=test_end)
@@ -105,7 +105,10 @@ def generate_adv_images(gpu, attack_algo, dataset, source_data_dir, train_start=
         data = ImageNet(data_dir=source_data_dir, train_start=train_start, train_end=train_end, test_start=test_start)
     elif dataset == "SVHN":
         data = SVHN(data_dir=source_data_dir)
-
+    elif dataset == "AWA2":
+        data = AWA2(data_dir=source_data_dir)
+    elif dataset == "CUB":
+        data = CUB200_2011(data_dir=source_data_dir)
 
     dataset_size = data.x_train.shape[0]
     dataset_train = data.to_tensorflow()[0]
@@ -319,6 +322,6 @@ if __name__ == '__main__':
                          'GPU for training')
     flags.DEFINE_enum("attack", "FGSM",
                       META_ATTACKER_INDEX, "the attack method")
-    flags.DEFINE_enum("dataset", "CIFAR10", ["CIFAR10", "CIFAR100", "MNIST", "F-MNIST", "ImageNet","SVHN"], "the dataset we want to generate")
+    flags.DEFINE_enum("dataset", "CIFAR10", ["CIFAR10", "CIFAR100", "MNIST", "F-MNIST", "ImageNet","SVHN", "AWA2","CUB"], "the dataset we want to generate")
     flags.DEFINE_enum("arch", "conv4", ["conv10","conv4", "vgg16","vgg16small", "resnet10", "resnet18"], "the network be used to generate adversarial examples")
     tf.app.run()
