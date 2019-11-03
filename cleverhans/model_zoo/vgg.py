@@ -57,7 +57,7 @@ class VGG16(Model):
 
         # Do a dummy run of fprop to create the variables from the start
         self.is_training = False
-        self.fprop(tf.placeholder(tf.float32, [200] + input_shape))
+        self.fprop(tf.placeholder(tf.float32, [100] + input_shape))
         # Put a reference to the params in self so that the params get pickled
         self.params = self.get_params()
 

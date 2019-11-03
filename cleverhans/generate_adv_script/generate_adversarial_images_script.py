@@ -9,32 +9,29 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+
 import sys
+
 sys.path.append("/home1/machen/adversarial_example")
 
 import logging
-import numpy as np
 import tensorflow as tf
 
 from cleverhans.augmentation import random_horizontal_flip, random_shift
 from cleverhans.compat import flags
 # from tensorflow.python.platform import flags
-from cleverhans.generate_adv_script.config import DATASET_INCHANNELS, DATASET_ADV_OUTPUT,DATASET_SOURCE_PATH,TF_CLEAN_IMAGE_MODEL_PATH
-from cleverhans.dataset import CIFAR10, MNIST, CIFAR100, ImageNet, SVHN, AWA2, CUB200_2011
+from cleverhans.dataset import CIFAR10, MNIST, CIFAR100, MiniImageNet
 from cleverhans.loss import CrossEntropy
 from cleverhans.model_zoo.shallow_CNN import Shallow10ConvLayersConv, Shallow4ConvLayersConv
 from cleverhans.model_zoo.vgg import VGG16, VGG16Small
-from cleverhans.model_zoo.resnet import ResNet10, ResNet18
+from cleverhans.model_zoo.resnet import ResNet10, ResNet18, ResNet50
 from cleverhans.train import train
-from cleverhans.utils import AccuracyReport, set_log_level, other_classes
+from cleverhans.utils import AccuracyReport, set_log_level
 from cleverhans.utils_tf import model_eval, untargeted_advx_image_eval
 from cleverhans.generate_adv_script.config import *
-import random
+from cleverhans.generate_adv_script import config
 from cleverhans.utils_tf import look_for_target_otherthan_gt
-import multiprocessing as mp
 import os
-from cleverhans.generate_adv_script.vgg_preprocessing import preprocess_image
-
 
 FLAGS = flags.FLAGS
 
@@ -67,7 +64,7 @@ def generate_adv_images(gpu, attack_algo, dataset, source_data_dir, train_start=
     if "batch_size" in UNTARGETED_ATTACKER_PARAM[attack_algo]:
         global BATCH_SIZE
         batch_size = UNTARGETED_ATTACKER_PARAM[attack_algo]["batch_size"]
-        BATCH_SIZE = batch_size
+        config.BATCH_SIZE = batch_size
     output_dir = DATASET_ADV_OUTPUT[args.dataset] + "/" + args.arch
     os.makedirs(output_dir, exist_ok=True)
     report = AccuracyReport()
@@ -95,23 +92,19 @@ def generate_adv_images(gpu, attack_algo, dataset, source_data_dir, train_start=
     if dataset == "CIFAR10":
         data = CIFAR10(data_dir=source_data_dir, train_start=train_start, train_end=train_end,
                      test_start=test_start, test_end=test_end)
-    elif dataset == "CIFAR100":
-        data = CIFAR100(data_dir=source_data_dir, train_start=train_start, train_end=train_end,
+    elif dataset == "CIFAR100" or dataset == "CIFAR100_coarse_label":
+        data = CIFAR100(data_dir=source_data_dir, dataset_name=dataset, train_start=train_start, train_end=train_end,
                        test_start=test_start, test_end=test_end)
     elif dataset == "MNIST" or dataset == "F-MNIST":
         data = MNIST(data_dir=source_data_dir, train_start=train_start, train_end=train_end, test_start=test_start,
                      test_end=test_end)
     elif dataset == "ImageNet":
-        data = ImageNet(data_dir=source_data_dir, train_start=train_start, train_end=train_end, test_start=test_start)
-    elif dataset == "SVHN":
-        data = SVHN(data_dir=source_data_dir)
-    elif dataset == "AWA2":
-        data = AWA2(data_dir=source_data_dir)
-    elif dataset == "CUB":
-        data = CUB200_2011(data_dir=source_data_dir)
+        data = MiniImageNet(data_dir=source_data_dir, train_start=train_start, train_end=train_end, test_start=test_start
+                            ,num_classes=CLASS_NUM["ImageNet"], arch=args.arch)
 
     dataset_size = data.x_train.shape[0]
     dataset_train = data.to_tensorflow()[0]
+    # dataset_train = dataset_train.shuffle(buffer_size=2000)
     dataset_train = dataset_train.map(
         lambda x, y: (random_shift(random_horizontal_flip(x)), y), 4)
     dataset_train = dataset_train.batch(batch_size)
@@ -122,17 +115,10 @@ def generate_adv_images(gpu, attack_algo, dataset, source_data_dir, train_start=
     # Use Image Parameters
     img_rows, img_cols, nchannels = x_test.shape[1:4]
     nb_classes = y_test.shape[1]
-
     # Define input TF placeholder
-    x = tf.placeholder(tf.float32, shape=(BATCH_SIZE, img_rows, img_cols,
+    x = tf.placeholder(tf.float32, shape=(batch_size, img_rows, img_cols,
                                           nchannels))
-
-    y = tf.placeholder(tf.float32, shape=(BATCH_SIZE, nb_classes))
-
-    if dataset == "ImageNet":
-
-        x = preprocess_image(x, 224, 224, is_training=False)
-
+    y = tf.placeholder(tf.float32, shape=(batch_size, nb_classes))
     # Train an MNIST model
     train_params = {
         'nb_epochs': nb_epochs,
@@ -169,8 +155,7 @@ def generate_adv_images(gpu, attack_algo, dataset, source_data_dir, train_start=
             report_text = 'adversarial'
         else:
             report_text = 'legitimate'
-        if report_text:
-            print('Test accuracy on %s examples: %0.4f' % (report_text, acc))
+        print('Test accuracy on %s examples: %0.4f' % (report_text, acc))
     if args.arch == "conv4":
         model = Shallow4ConvLayersConv(args.arch, IMG_SIZE[dataset], CLASS_NUM[dataset],
                                        in_channels=DATASET_INCHANNELS[args.dataset], dim_hidden=64)
@@ -186,10 +171,9 @@ def generate_adv_images(gpu, attack_algo, dataset, source_data_dir, train_start=
     elif args.arch == "resnet10":
         model = ResNet10(args.arch, CLASS_NUM[dataset], [IMG_SIZE[dataset], IMG_SIZE[dataset], DATASET_INCHANNELS[args.dataset]])
     elif args.arch == "resnet18":
-        model = ResNet18(args.arch, CLASS_NUM[dataset],
-                         [IMG_SIZE[dataset], IMG_SIZE[dataset], DATASET_INCHANNELS[args.dataset]])
-
-
+        model = ResNet18(args.arch, CLASS_NUM[dataset], [IMG_SIZE[dataset], IMG_SIZE[dataset], DATASET_INCHANNELS[args.dataset]])
+    elif args.arch == "resnet50":
+        model = ResNet50(args.arch, CLASS_NUM[dataset], [IMG_SIZE[dataset], IMG_SIZE[dataset], DATASET_INCHANNELS[args.dataset]])
 
     def evaluate():
         if hasattr(model, "is_training"):
@@ -201,17 +185,13 @@ def generate_adv_images(gpu, attack_algo, dataset, source_data_dir, train_start=
 
     resume = TF_CLEAN_IMAGE_MODEL_PATH[args.dataset] + "/{0}".format(args.arch)
     os.makedirs(resume, exist_ok=True)
-
-
     print("using folder {} to store model".format(resume))
     resume_files = os.listdir(resume)
     loss = CrossEntropy(model, smoothing=label_smoothing)
-    if len(resume_files) == 0:  # clean train must be done!
-
+    if len(resume_files) == 0 or len(list(filter(lambda e: os.path.isfile(resume + "/" + e), resume_files)))==0:  # clean train must be done!
         if hasattr(model, "is_training"):
             model.is_training = True
 
-        assert dataset != "ImageNet"  # ImageNet is so big, so we just load pretrained model
         var_list = tf.trainable_variables()
         g_list = tf.global_variables()
         bn_moving_vars = [g for g in g_list if 'moving_mean' in g.name]
@@ -235,7 +215,7 @@ def generate_adv_images(gpu, attack_algo, dataset, source_data_dir, train_start=
             var_list += bn_moving_vars
             saver = tf.train.Saver(var_list=var_list)
             saver.restore(sess, path)
-
+            print("load pretrained model {}".format(path))
         else:
             # resume from old
             latest_checkpoint = tf.train.latest_checkpoint(resume)
@@ -246,8 +226,7 @@ def generate_adv_images(gpu, attack_algo, dataset, source_data_dir, train_start=
             var_list += bn_moving_vars
             saver = tf.train.Saver(var_list=var_list)
             saver.restore(sess, latest_checkpoint)
-
-
+            print("load pretrained model {}".format(resume))
 
         # Calculate training error
         if testing:
@@ -261,7 +240,7 @@ def generate_adv_images(gpu, attack_algo, dataset, source_data_dir, train_start=
 
     if attack_algo in NEED_TARGETED_Y:
         y_target = look_for_target_otherthan_gt(y, CLASS_NUM[args.dataset])
-        y_target = tf.reshape(y_target, (BATCH_SIZE, -1))
+        y_target = tf.reshape(y_target, (batch_size, -1))
         param_dict["y_target"] = y_target
 
     adv_x = attacker.generate(x, **param_dict)  # tensor
@@ -287,8 +266,8 @@ def generate_adv_images(gpu, attack_algo, dataset, source_data_dir, train_start=
 def main(argv=None):
 
     global BATCH_SIZE
-    if FLAGS.batch_size != BATCH_SIZE:
-        BATCH_SIZE = FLAGS.batch_size
+    if FLAGS.batch_size != config.BATCH_SIZE:
+        config.BATCH_SIZE = FLAGS.batch_size
 
     # if FLAGS.attack == "all":
     #     pool = mp.Pool(processes=len(META_ATTACKER_INDEX))
@@ -305,7 +284,7 @@ def main(argv=None):
     # else:
     generate_adv_images(gpu=FLAGS.gpus, attack_algo=FLAGS.attack, dataset=FLAGS.dataset,
                         source_data_dir=DATASET_SOURCE_PATH[FLAGS.dataset], nb_epochs=FLAGS.nb_epochs, batch_size=FLAGS.batch_size,
-                            learning_rate=FLAGS.learning_rate,
+                        learning_rate=FLAGS.learning_rate,
                          testing=True, args=FLAGS)
 
 
@@ -314,14 +293,14 @@ if __name__ == '__main__':
                          'Model size multiplier')
     flags.DEFINE_integer('nb_epochs', NB_EPOCHS,
                          'Number of epochs to train model')
-    flags.DEFINE_integer('batch_size', BATCH_SIZE,
+    flags.DEFINE_integer('batch_size', config.BATCH_SIZE,
                          'Size of training batches')
-    flags.DEFINE_float('learning_rate', 0.001,
+    flags.DEFINE_float('learning_rate', 1e-3,
                        'Learning rate for training')
     flags.DEFINE_string('gpus', "0",
                          'GPU for training')
     flags.DEFINE_enum("attack", "FGSM",
                       META_ATTACKER_INDEX, "the attack method")
-    flags.DEFINE_enum("dataset", "CIFAR10", ["CIFAR10", "CIFAR100", "MNIST", "F-MNIST", "ImageNet","SVHN", "AWA2","CUB"], "the dataset we want to generate")
-    flags.DEFINE_enum("arch", "conv4", ["conv10","conv4", "vgg16","vgg16small", "resnet10", "resnet18"], "the network be used to generate adversarial examples")
+    flags.DEFINE_enum("dataset", "CIFAR10", ["CIFAR10", "CIFAR100", "CIFAR100_coarse_label","MNIST", "F-MNIST", "ImageNet","SVHN", "AWA2","CUB"], "the dataset we want to generate")
+    flags.DEFINE_enum("arch", "conv4", ["conv10","conv4", "vgg16","vgg16small", "resnet10", "resnet18", "resnet50"], "the network be used to generate adversarial examples")
     tf.app.run()

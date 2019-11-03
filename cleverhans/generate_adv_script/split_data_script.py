@@ -1,8 +1,9 @@
 import sys
 sys.path.append("/home1/machen/adversarial_example")
-from cleverhans.generate_adv_script.config import CIFAR10_OUTPUT_DATA_DIR,CIFAR100_OUTPUT_DATA_DIR,\
-                        MNIST_OUTPUT_DATA_DIR, FMNIST_OUTPUT_DATA_DIR, \
-                        META_ATTACKER_INDEX,META_ATTACKER_PART_I,META_ATTACKER_PART_II, ROOT_DATA_DIR, SVHN_OUTPUT_DATA_DIR
+from cleverhans.generate_adv_script.config import CIFAR10_OUTPUT_DATA_DIR, CIFAR100_OUTPUT_DATA_DIR, \
+    MNIST_OUTPUT_DATA_DIR, FMNIST_OUTPUT_DATA_DIR, \
+    META_ATTACKER_INDEX, META_ATTACKER_PART_I, META_ATTACKER_PART_II, ROOT_DATA_DIR, SVHN_OUTPUT_DATA_DIR, \
+    ILSVRC12_OUTPUT_DATA_DIR
 import os
 import numpy as np
 from collections import defaultdict
@@ -100,6 +101,10 @@ def split_train_PART_attack_type(npz_folder, output_root_dir):
                         file_obj.write(str(len(adv_images)))
                         file_obj.flush()
                     print("save {} image files into {}".format(len(adv_images),out_file_path))
+            adv_image_dict.clear()
+            adv_images = None
+            del data
+
 
 
 def chunk(xs, n):
@@ -118,6 +123,7 @@ def chunk(xs, n):
 def split_test_PART_attack_type(npz_folder, output_root_dir):
     for npz_path in os.listdir(npz_folder):
         if npz_path.endswith(".npz") and "test" in npz_path:
+
             attack_name = npz_path[:npz_path.index("_untargeted")]
             split_type = 1
             if attack_name in META_ATTACKER_PART_I and attack_name not in META_ATTACKER_PART_II:
@@ -190,6 +196,9 @@ def split_test_PART_attack_type(npz_folder, output_root_dir):
                             file_obj.flush()
 
                         print("save {} image files into {}".format(len(query_images),out_file_path))
+                adv_image_dict.clear()
+                adv_images = None
+                del data
 
 
 def save_npz_file(npz_path, leave_one_attack_name, attack_index, output_root_dir, train_test_str):
@@ -281,12 +290,14 @@ def split_leave_one_out_attack_type(npz_folder, output_root_dir):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='PyTorch Meta_SGD Training')
 
-    parser.add_argument("--dataset", type=str, default="CIFAR-10", choices=["CIFAR-10", "SVHN", "MNIST", "F-MNIST"],
+    parser.add_argument("--dataset", type=str, default="CIFAR-10", choices=["CIFAR-10", "SVHN", "MNIST", "F-MNIST","ImageNet"],
                         help="the dataset to train")
     parser.add_argument("--adv_arch", default="conv3",type=str, choices=["conv3", "resnet10", "resnet18"])
     args = parser.parse_args()
     dataset = args.dataset
-    if dataset == "CIFAR-10":
+    if dataset == "ImageNet":
+        out_root_dir = ILSVRC12_OUTPUT_DATA_DIR
+    elif dataset == "CIFAR-10":
         out_root_dir = CIFAR10_OUTPUT_DATA_DIR
     elif dataset == "CIFAR-100":
         out_root_dir = CIFAR100_OUTPUT_DATA_DIR
@@ -296,7 +307,7 @@ if __name__ == "__main__":
         out_root_dir = FMNIST_OUTPUT_DATA_DIR
     elif dataset == "SVHN":
         out_root_dir = SVHN_OUTPUT_DATA_DIR
-    out_root_dir = out_root_dir + "/{}".format(args.adv_arch)
+    out_root_dir = out_root_dir + "/{}".format(args.adv_arch) + "/npz"
     split_train_PART_attack_type(out_root_dir, "{}/TRAIN_I_TEST_II/train".format(out_root_dir))
     split_test_PART_attack_type(out_root_dir, "{}/TRAIN_I_TEST_II/test".format(out_root_dir))
 

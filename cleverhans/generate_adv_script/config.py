@@ -11,9 +11,12 @@ CIFAR10_SOURCE_DATA_DIR = "{}/CIFAR-10/cifar-10-batches-py".format(ROOT_DATA_DIR
 CIFAR10_OUTPUT_DATA_DIR = "{}/CIFAR-10/adversarial_images".format(ROOT_DATA_DIR)
 CIFAR10_MODEL_STORE_PATH = "{}/CIFAR-10/tf_trained_model".format(ROOT_DATA_DIR)
 
-CIFAR100_SOURCE_DATA_DIR = "{}/CIFAR-100/cifar-100-batches-py".format(ROOT_DATA_DIR)
+CIFAR100_SOURCE_DATA_DIR = "{}/CIFAR-100/cifar-100-python".format(ROOT_DATA_DIR)
 CIFAR100_OUTPUT_DATA_DIR = "{}/CIFAR-100/adversarial_images".format(ROOT_DATA_DIR)
 CIFAR100_MODEL_STORE_PATH = "{}/CIFAR-100/tf_trained_model".format(ROOT_DATA_DIR)
+
+CIFAR100_COARSE_LABEL_OUTPUT_DATA_DIR = "{}/CIFAR-100/adversarial_images_coarse_label".format(ROOT_DATA_DIR)
+CIFAR100_COARSE_LABEL_MODEL_STORE_PATH = "{}/CIFAR-100/tf_trained_model_coarse_label".format(ROOT_DATA_DIR)
 
 MNIST_SOURCE_DATA_DIR = "{}/MNIST/".format(ROOT_DATA_DIR)
 MNIST_OUTPUT_DATA_DIR = "{}/MNIST/adversarial_images".format(ROOT_DATA_DIR)
@@ -40,25 +43,32 @@ CUB_SOURCE_DATA_DIR =  "{}/CUB200-2011/".format(ROOT_DATA_DIR)
 CUB_OUTPUT_DATA_DIR = "{}/CUB200-2011/adversarial_images".format(ROOT_DATA_DIR)
 CUB_MODEL_STORE_PATH = "{}/CUB200-2011/tf_trained_model".format(ROOT_DATA_DIR)
 
-ILSVRC12_SOURCE_DATA_DIR = "{}/ILSVRC2012/validation".format(ROOT_DATA_DIR)
-ILSVRC12_OUTPUT_DATA_DIR = "{}/ILSVRC2012/adversarial_images".format(ROOT_DATA_DIR)
-ILSVRC12_MODEL_STORE_PATH = "{}/ILSVRC2012/tf_trained_model".format(ROOT_DATA_DIR)
+ILSVRC12_SOURCE_DATA_DIR = "{}/miniimagenet/new2/".format(ROOT_DATA_DIR)
+ILSVRC12_OUTPUT_DATA_DIR = "{}/miniimagenet/adversarial_images".format(ROOT_DATA_DIR)
+ILSVRC12_MODEL_STORE_PATH = "{}/miniimagenet/tf_trained_model".format(ROOT_DATA_DIR)
 
-DATASET_ADV_OUTPUT = {"CIFAR10":CIFAR10_OUTPUT_DATA_DIR, "SVHN":SVHN_OUTPUT_DATA_DIR,"MNIST":MNIST_OUTPUT_DATA_DIR,
-                      "F-MNIST":FMNIST_OUTPUT_DATA_DIR, "AWA2":AWA2_OUTPUT_DATA_DIR, "CUB":CUB_OUTPUT_DATA_DIR}
-DATASET_SOURCE_PATH = {"CIFAR10":CIFAR10_SOURCE_DATA_DIR, "SVHN":SVHN_SOURCE_DATA_DIR, "MNIST":MNIST_SOURCE_DATA_DIR,
-                       "F-MNIST":FMNIST_SOURCE_DATA_DIR, "AWA2":AWA2_SOURCE_DATA_DIR, "CUB":CUB_SOURCE_DATA_DIR}
-TF_CLEAN_IMAGE_MODEL_PATH =  {"CIFAR10":CIFAR10_MODEL_STORE_PATH, "SVHN":SVHN_MODEL_STORE_PATH,
+ILSVRC12_ROOT_DIR = "{}/miniimagenet/".format(ROOT_DATA_DIR)
+
+DATASET_ADV_OUTPUT = {"CIFAR10":CIFAR10_OUTPUT_DATA_DIR, "CIFAR100": CIFAR100_OUTPUT_DATA_DIR, "CIFAR100_coarse_label": CIFAR100_COARSE_LABEL_OUTPUT_DATA_DIR,
+                      "SVHN":SVHN_OUTPUT_DATA_DIR,"MNIST":MNIST_OUTPUT_DATA_DIR,
+                      "F-MNIST":FMNIST_OUTPUT_DATA_DIR, "AWA2":AWA2_OUTPUT_DATA_DIR,
+                      "CUB":CUB_OUTPUT_DATA_DIR, "ImageNet":ILSVRC12_OUTPUT_DATA_DIR }
+DATASET_SOURCE_PATH = {"CIFAR10":CIFAR10_SOURCE_DATA_DIR, "CIFAR100": CIFAR100_SOURCE_DATA_DIR, "CIFAR100_coarse_label": CIFAR100_SOURCE_DATA_DIR,
+                       "SVHN":SVHN_SOURCE_DATA_DIR, "MNIST":MNIST_SOURCE_DATA_DIR,
+                       "F-MNIST":FMNIST_SOURCE_DATA_DIR, "AWA2":AWA2_SOURCE_DATA_DIR,
+                       "CUB":CUB_SOURCE_DATA_DIR, "ImageNet":ILSVRC12_SOURCE_DATA_DIR }
+TF_CLEAN_IMAGE_MODEL_PATH =  {"CIFAR10":CIFAR10_MODEL_STORE_PATH,  "CIFAR100":CIFAR100_MODEL_STORE_PATH,  "CIFAR100_coarse_label": CIFAR100_COARSE_LABEL_MODEL_STORE_PATH,
+                              "SVHN":SVHN_MODEL_STORE_PATH,
                               "MNIST":MNIST_MODEL_STORE_PATH,"F-MNIST":FMNIST_MODEL_STORE_PATH,
-                              "AWA2":AWA2_MODEL_STORE_PATH, "CUB":CUB_MODEL_STORE_PATH}
+                              "AWA2":AWA2_MODEL_STORE_PATH, "CUB":CUB_MODEL_STORE_PATH, "ImageNet": ILSVRC12_MODEL_STORE_PATH}
 
-IMG_SIZE = {"CIFAR10": 32, "CIFAR100":100, "MNIST":28, "F-MNIST":28, "ImageNet": 224,"SVHN":32, "AWA2":224, "CUB":224}
-CLASS_NUM = {"CIFAR10": 10,"CIFAR100":100, "MNIST":10, "F-MNIST":10, "ImageNet": 1000, "SVHN": 10,"AWA2":len(AWA2_ALL_FOLDER), "CUB": 200}
-DATASET_INCHANNELS = {"CIFAR10": 3, "MNIST":1, "F-MNIST":1, "ImageNet":3, "SVHN":3, "AWA2":3,"CUB":3}
+IMG_SIZE = {"CIFAR10": 32, "CIFAR100":32, "CIFAR100_coarse_label":32, "MNIST":28, "F-MNIST":28, "ImageNet": 224,"SVHN":32, "AWA2":224, "CUB":224}
+CLASS_NUM = {"CIFAR10": 10,"CIFAR100":100,"CIFAR100_coarse_label":20,  "MNIST":10, "F-MNIST":10, "ImageNet": 20, "SVHN": 10,"AWA2":len(AWA2_ALL_FOLDER), "CUB": 200}
+DATASET_INCHANNELS = {"CIFAR10": 3,"CIFAR100":3, "CIFAR100_coarse_label":3,"MNIST":1, "F-MNIST":1, "ImageNet":3, "SVHN":3, "AWA2":3,"CUB":3}
 
 # train config
 NB_FILTERS = 64
-NB_EPOCHS = 50
+NB_EPOCHS = 20
 BATCH_SIZE = 200
 CLEAN_TRAIN = True
 
@@ -123,9 +133,9 @@ UNTARGETED_ATTACKER_PARAM = {
                 'clip_min': -3., 'clip_max': 3., "eps": 0.3, "alpha": 0.01, "nb_iter": 40, "ord": 2},
     "PGD_L1": {'batch_size': BATCH_SIZE, "rand_init":True, "rand_minmax": 0.3,
                 'clip_min': -3., 'clip_max': 3., "eps": 0.3, "alpha": 0.01, "nb_iter": 40, "ord": 1},
-    "jsma": {"theta": 1., "gamma": 0.1, "clip_min": -3., "clip_max": 3., "y_target": None, "batch_size": 50},  # slow
-    "deep_fool_L2": {"overshoot": 0.02, "max_iter": 40, "clip_min": -3., "clip_max": 3., "batch_size": 500, "Lp_norm": 2},
-    "deep_fool_L_infinity": { "overshoot": 0.02, "max_iter": 40, "clip_min": -3., "clip_max": 3., "batch_size": 500, "Lp_norm": np.inf},  # 成功率低
+    "jsma": {"theta": 1., "gamma": 0.1, "clip_min": -3., "clip_max": 3., "y_target": None, "batch_size": 40},  # slow
+    "deep_fool_L2": {"overshoot": 0.02, "max_iter": 40, "clip_min": -3., "clip_max": 3., "batch_size": 100, "Lp_norm": 2},
+    "deep_fool_L_infinity": { "overshoot": 0.02, "max_iter": 40, "clip_min": -3., "clip_max": 3., "batch_size": 100, "Lp_norm": np.inf},  # 成功率低
     "EAD": {"clip_min": -3., "clip_max": 3.,"batch_size":BATCH_SIZE,},  # 运行慢 slow
 
 
@@ -139,7 +149,7 @@ UNTARGETED_ATTACKER_PARAM = {
     "SPSA": {"nb_iter": 40, "batch_size":1, "eps": 0.1, "clip_min":-3., "clip_max":3., "spsa_samples":128},
     "newton_fool": {"nb_iter":40, "eta":0.01, "clip_min":-3., "clip_max":3.,},
     "LBFGS": {"max_iterations":1000, "binary_search_steps":10, "initial_const": 1e-1, "batch_size":BATCH_SIZE, "clip_min":-3., "clip_max":3.},
-    "max_confidence": {"nb_classes":10, "batch_size":200},      # base_attacker 默认用PGD  FIXME 必须修改为根据不同的数据库有不同的nb_classes
+    "max_confidence": {"nb_classes":10, },      # base_attacker 默认用PGD  FIXME 必须修改为根据不同的数据库有不同的nb_classes
     "semantic": {"center":True, "max_val":2.7},
     "spatial_transform": {"n_dxs": 10, "n_dys":10},
     "noise": {"clip_min":-3., "clip_max":3., "ord":np.inf},

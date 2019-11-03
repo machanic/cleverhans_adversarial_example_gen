@@ -34,7 +34,7 @@ class ResNet10(Model):
     def fprop(self, x, **kwargs):
         del kwargs
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
-            logits = resnet_v2_10(x, self.nb_classes, self.is_training)
+            logits = resnet_v2_10(x, self.nb_classes, is_training=self.is_training)
             logits = tf.reshape(logits, shape=[-1, self.nb_classes])
         return {self.O_LOGITS: logits,
                     self.O_PROBS: tf.nn.softmax(logits=logits)}
@@ -55,6 +55,28 @@ class ResNet18(Model):
         del kwargs
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
             logits = resnet_v2_18(x, self.nb_classes, is_training=self.is_training)
+            logits = tf.reshape(logits, shape=[-1, self.nb_classes])
+        return {self.O_LOGITS: logits,
+                    self.O_PROBS: tf.nn.softmax(logits=logits)}
+
+
+
+class ResNet50(Model):
+    def __init__(self, scope, nb_classes, input_shape, **kwargs):
+        del kwargs
+        Model.__init__(self, scope, nb_classes, locals())
+        self.input_shape = input_shape
+        self.is_training = True
+        # Do a dummy run of fprop to create the variables from the start
+        self.dummpy_input = tf.placeholder(tf.float32, [FLAGS.batch_size] + input_shape)
+        self.fprop(self.dummpy_input)
+        # Put a reference to the params in self so that the params get pickled
+        self.params = self.get_params()
+
+    def fprop(self, x, **kwargs):
+        del kwargs
+        with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
+            logits = resnet_v2_50(x, self.nb_classes, is_training=self.is_training)
             logits = tf.reshape(logits, shape=[-1, self.nb_classes])
         return {self.O_LOGITS: logits,
                     self.O_PROBS: tf.nn.softmax(logits=logits)}
@@ -278,17 +300,14 @@ def resnet_v2_18(inputs,
 
 def resnet_v2_50(inputs,
                  num_classes=None,
-                 is_training=True,
                  global_pool=True,
-                 output_stride=None,
-                 reuse=None,
-                 scope='resnet_v2_50'):
+                 output_stride=None,is_training=True,):
     """ResNet-50 model of [1]. See resnet_v2() for arg and return description."""
     blocks = [
-        resnet_v2_block('block1', base_depth=64, num_units=3, stride=2),
-        resnet_v2_block('block2', base_depth=128, num_units=4, stride=2),
-        resnet_v2_block('block3', base_depth=256, num_units=6, stride=2),
-        resnet_v2_block('block4', base_depth=512, num_units=3, stride=1),
+        resnet_v2_block('block1', base_depth=64, num_units=3, stride=2,is_training=is_training),
+        resnet_v2_block('block2', base_depth=128, num_units=4, stride=2,is_training=is_training),
+        resnet_v2_block('block3', base_depth=256, num_units=6, stride=2,is_training=is_training),
+        resnet_v2_block('block4', base_depth=512, num_units=3, stride=1,is_training=is_training),
     ]
     return resnet_v2(
         inputs,
@@ -309,10 +328,10 @@ def resnet_v2_101(inputs,
                   scope='resnet_v2_101'):
     """ResNet-101 model of [1]. See resnet_v2() for arg and return description."""
     blocks = [
-        resnet_v2_block('block1', base_depth=64, num_units=3, stride=2),
-        resnet_v2_block('block2', base_depth=128, num_units=4, stride=2),
-        resnet_v2_block('block3', base_depth=256, num_units=23, stride=2),
-        resnet_v2_block('block4', base_depth=512, num_units=3, stride=1),
+        resnet_v2_block('block1', base_depth=64, num_units=3, stride=2,is_training=is_training),
+        resnet_v2_block('block2', base_depth=128, num_units=4, stride=2,is_training=is_training),
+        resnet_v2_block('block3', base_depth=256, num_units=23, stride=2,is_training=is_training),
+        resnet_v2_block('block4', base_depth=512, num_units=3, stride=1,is_training=is_training),
     ]
     return resnet_v2(
         inputs,
@@ -333,10 +352,10 @@ def resnet_v2_152(inputs,
                   scope='resnet_v2_152'):
     """ResNet-152 model of [1]. See resnet_v2() for arg and return description."""
     blocks = [
-        resnet_v2_block('block1', base_depth=64, num_units=3, stride=2),
-        resnet_v2_block('block2', base_depth=128, num_units=8, stride=2),
-        resnet_v2_block('block3', base_depth=256, num_units=36, stride=2),
-        resnet_v2_block('block4', base_depth=512, num_units=3, stride=1),
+        resnet_v2_block('block1', base_depth=64, num_units=3, stride=2,is_training=is_training),
+        resnet_v2_block('block2', base_depth=128, num_units=8, stride=2,is_training=is_training),
+        resnet_v2_block('block3', base_depth=256, num_units=36, stride=2,is_training=is_training),
+        resnet_v2_block('block4', base_depth=512, num_units=3, stride=1,is_training=is_training),
     ]
     return resnet_v2(
         inputs,
@@ -357,10 +376,10 @@ def resnet_v2_200(inputs,
                   scope='resnet_v2_200'):
     """ResNet-200 model of [2]. See resnet_v2() for arg and return description."""
     blocks = [
-        resnet_v2_block('block1', base_depth=64, num_units=3, stride=2),
-        resnet_v2_block('block2', base_depth=128, num_units=24, stride=2),
-        resnet_v2_block('block3', base_depth=256, num_units=36, stride=2),
-        resnet_v2_block('block4', base_depth=512, num_units=3, stride=1),
+        resnet_v2_block('block1', base_depth=64, num_units=3, stride=2,is_training=is_training),
+        resnet_v2_block('block2', base_depth=128, num_units=24, stride=2,is_training=is_training),
+        resnet_v2_block('block3', base_depth=256, num_units=36, stride=2,is_training=is_training),
+        resnet_v2_block('block4', base_depth=512, num_units=3, stride=1,is_training=is_training),
     ]
     return resnet_v2(
         inputs,

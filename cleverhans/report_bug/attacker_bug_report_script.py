@@ -400,7 +400,7 @@ ATTACK_PARAM = {"VAT": {"nb_iter":20, "clip_min":-3., "clip_max":3., "eps":6.0, 
                 "deep_fool_L_infinity":{ "overshoot": 0.02, "max_iter": 40, "clip_min": -3., "clip_max": 3., "batch_size": 500, "Lp_norm": np.inf},
                 }
 NB_EPOCHS  = 50
-BATCH_SIZE = 200
+BATCH_SIZE = 100
 NB_FILTERS = 64
 CLEAN_TRAIN = True
 LEARNING_RATE = 0.001

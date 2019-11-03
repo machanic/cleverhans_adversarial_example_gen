@@ -12,9 +12,6 @@ import tempfile
 import warnings
 import numpy as np
 import tensorflow as tf
-import torchvision.transforms as transforms
-import copy
-from PIL import Image
 from collections import defaultdict
 import pickle
 
@@ -123,25 +120,8 @@ def get_category_similarity(similar_category_path):
     return word_sim_candidates
 
 
-def get_preprocessor():
-    mean = [0.485, 0.456, 0.406]
-    std = [0.229, 0.224, 0.225]
-    normalizer = transforms.Normalize(mean=mean, std=std)
-    preprocess_transform = transforms.Compose([
-        transforms.ToTensor(),
-        normalizer
-    ])
-    return preprocess_transform
 
 
-def transform_image(preprocessor, np_image):
-    processed = []
-    for image in np_image:
-        image_processed = preprocessor(Image.fromarray(image.astype(np.uint8))).detach().numpy()
-        processed.append(image_processed)
-    result = np.stack(processed)  # B, C, H, W
-    result = np.ascontiguousarray(np.transpose(result, axes=(0, 2, 3, 1)), dtype=np.float32)
-    return result
 
 
 def convert_image(np_image):
@@ -156,26 +136,3 @@ def convert_image(np_image):
     np_image = (np_image - mean) / std
     return np_image
 
-
-def recreate_image(im_as_tensor):
-    """
-        Recreates images from a torch Tensor, sort of reverse preprocessing
-
-    Args:
-        im_as_tensor (torch variable): Image to recreate
-
-    returns:
-        recreated_im (numpy arr): Recreated image in array
-    """
-    reverse_mean = [-0.485, -0.456, -0.406]
-    reverse_std = [1 / 0.229, 1 / 0.224, 1 / 0.225]
-    recreated_im = copy.copy(im_as_tensor.detach().cpu().numpy()[0])  # C, H, W
-    for c in range(3):
-        recreated_im[c] /= reverse_std[c]
-        recreated_im[c] -= reverse_mean[c]
-    recreated_im[recreated_im > 1] = 1
-    recreated_im[recreated_im < 0] = 0
-    recreated_im = np.round(recreated_im * 255)
-
-    recreated_im = np.uint8(recreated_im).transpose(1, 2, 0)  # H, W, C
-    return Image.fromarray(recreated_im)
