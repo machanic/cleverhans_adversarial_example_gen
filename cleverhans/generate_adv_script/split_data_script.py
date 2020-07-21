@@ -1,9 +1,8 @@
 import sys
 sys.path.append("/home1/machen/adversarial_example")
-from cleverhans.generate_adv_script.config import CIFAR10_OUTPUT_DATA_DIR, CIFAR100_OUTPUT_DATA_DIR, \
-    MNIST_OUTPUT_DATA_DIR, FMNIST_OUTPUT_DATA_DIR, \
-    META_ATTACKER_INDEX, META_ATTACKER_PART_I, META_ATTACKER_PART_II, ROOT_DATA_DIR, SVHN_OUTPUT_DATA_DIR, \
-    ILSVRC12_OUTPUT_DATA_DIR
+from cleverhans.generate_adv_script.config import CIFAR10_OUTPUT_DATA_DIR, MNIST_OUTPUT_DATA_DIR, FMNIST_OUTPUT_DATA_DIR, \
+    META_ATTACKER_INDEX, META_ATTACKER_PART_I, META_ATTACKER_PART_II, SVHN_OUTPUT_DATA_DIR, \
+    ILSVRC12_OUTPUT_DATA_DIR, CIFAR100_COARSE_LABEL_OUTPUT_DATA_DIR
 import os
 import numpy as np
 from collections import defaultdict
@@ -11,6 +10,7 @@ import random
 import argparse
 import glob
 import re
+
 def split_train(npz_folder, output_root_dir):
     for npz_path in os.listdir(npz_folder):
         if npz_path.endswith(".npz") and "train" in npz_path:
@@ -51,6 +51,15 @@ def split_train_PART_attack_type(npz_folder, output_root_dir):
     for npz_path in os.listdir(npz_folder):
         if npz_path.endswith(".npz") and "train" in npz_path:
             attack_name = npz_path[:npz_path.index("_untargeted")]
+            split_type = 0
+            if attack_name in META_ATTACKER_PART_I and attack_name not in META_ATTACKER_PART_II:
+                split_type = 1
+            elif attack_name not in META_ATTACKER_PART_I and attack_name in META_ATTACKER_PART_II:
+                split_type = 2
+            elif attack_name in META_ATTACKER_PART_I and attack_name in META_ATTACKER_PART_II:
+                split_type = 3
+            if split_type == 0:
+                continue
             attack_index = META_ATTACKER_INDEX.index(attack_name) + 1   # clean: 1
             npz_path = npz_folder + "/" + npz_path
             data = np.load(npz_path)
@@ -68,20 +77,8 @@ def split_train_PART_attack_type(npz_folder, output_root_dir):
             adv_image_dict = defaultdict(list)
             for idx, label in enumerate(gt_label):  # FIXME 修改为adv_pred
                 adv_image_dict[label].append(adv_images[idx])    # key = gt_label, value = image list
-
-
             for label, adv_images_list in adv_image_dict.items():
                 out_dir_names = []
-                split_type = 1
-                if label in np.arange(5).tolist():
-                    if attack_name in META_ATTACKER_PART_I and attack_name not in META_ATTACKER_PART_II:
-                        split_type = 1
-                    elif attack_name not in META_ATTACKER_PART_I and attack_name in META_ATTACKER_PART_II and label in np.arange(5,10).tolist():
-                        split_type = 2
-                    elif attack_name in META_ATTACKER_PART_I and attack_name in META_ATTACKER_PART_II:
-                        split_type = 3
-
-
                 if split_type == 1:
                     out_dir_names = ["{}/I/{}_{}".format(output_root_dir, label, attack_index)]
                 elif split_type == 2:
@@ -101,10 +98,6 @@ def split_train_PART_attack_type(npz_folder, output_root_dir):
                         file_obj.write(str(len(adv_images)))
                         file_obj.flush()
                     print("save {} image files into {}".format(len(adv_images),out_file_path))
-            adv_image_dict.clear()
-            adv_images = None
-            del data
-
 
 
 def chunk(xs, n):
@@ -125,14 +118,15 @@ def split_test_PART_attack_type(npz_folder, output_root_dir):
         if npz_path.endswith(".npz") and "test" in npz_path:
 
             attack_name = npz_path[:npz_path.index("_untargeted")]
-            split_type = 1
+            split_type = 0
             if attack_name in META_ATTACKER_PART_I and attack_name not in META_ATTACKER_PART_II:
                 split_type = 1
             elif attack_name not in META_ATTACKER_PART_I and attack_name in META_ATTACKER_PART_II:
                 split_type = 2
             elif attack_name in META_ATTACKER_PART_I and attack_name in META_ATTACKER_PART_II:
                 split_type = 3
-
+            if split_type == 0:
+                continue
 
             if attack_name in META_ATTACKER_INDEX:
                 attack_index = META_ATTACKER_INDEX.index(attack_name) + 1   # clean: 1
@@ -290,9 +284,9 @@ def split_leave_one_out_attack_type(npz_folder, output_root_dir):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='PyTorch Meta_SGD Training')
 
-    parser.add_argument("--dataset", type=str, default="CIFAR-10", choices=["CIFAR-10", "SVHN", "MNIST", "F-MNIST","ImageNet"],
+    parser.add_argument("--dataset", type=str, default="CIFAR-10", choices=["CIFAR-10", "CIFAR-100", "SVHN", "MNIST", "FashionMNIST","ImageNet"],
                         help="the dataset to train")
-    parser.add_argument("--adv_arch", default="conv3",type=str, choices=["conv3", "resnet10", "resnet18"])
+    parser.add_argument("--adv_arch", default="conv4",type=str, choices=["conv4", "resnet10", "resnet18"])
     args = parser.parse_args()
     dataset = args.dataset
     if dataset == "ImageNet":
@@ -300,15 +294,15 @@ if __name__ == "__main__":
     elif dataset == "CIFAR-10":
         out_root_dir = CIFAR10_OUTPUT_DATA_DIR
     elif dataset == "CIFAR-100":
-        out_root_dir = CIFAR100_OUTPUT_DATA_DIR
+        out_root_dir = CIFAR100_COARSE_LABEL_OUTPUT_DATA_DIR
     elif dataset == "MNIST":
         out_root_dir = MNIST_OUTPUT_DATA_DIR
-    elif dataset == "F-MNIST":
+    elif dataset == "FashionMNIST":
         out_root_dir = FMNIST_OUTPUT_DATA_DIR
     elif dataset == "SVHN":
         out_root_dir = SVHN_OUTPUT_DATA_DIR
-    out_root_dir = out_root_dir + "/{}".format(args.adv_arch) + "/npz"
-    split_train_PART_attack_type(out_root_dir, "{}/TRAIN_I_TEST_II/train".format(out_root_dir))
+    out_root_dir = out_root_dir + "/{}/npz".format(args.adv_arch)
+    # split_train_PART_attack_type(out_root_dir, "{}/TRAIN_I_TEST_II/train".format(out_root_dir))
     split_test_PART_attack_type(out_root_dir, "{}/TRAIN_I_TEST_II/test".format(out_root_dir))
 
     # split_leave_one_out_attack_type(out_root_dir, "{}/leave_one_out".format(out_root_dir))

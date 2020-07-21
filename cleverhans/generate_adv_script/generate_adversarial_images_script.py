@@ -9,22 +9,18 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-
 import sys
-
 sys.path.append("/home1/machen/adversarial_example")
-
 import logging
 import tensorflow as tf
-
+from cleverhans.dataset.tiny_imagenet import TinyImageNet
 from cleverhans.augmentation import random_horizontal_flip, random_shift
 from cleverhans.compat import flags
-# from tensorflow.python.platform import flags
 from cleverhans.dataset import CIFAR10, MNIST, CIFAR100, MiniImageNet
 from cleverhans.loss import CrossEntropy
 from cleverhans.model_zoo.shallow_CNN import Shallow10ConvLayersConv, Shallow4ConvLayersConv
 from cleverhans.model_zoo.vgg import VGG16, VGG16Small
-from cleverhans.model_zoo.resnet import ResNet10, ResNet18, ResNet50
+from cleverhans.model_zoo.resnet import ResNet10, ResNet18, ResNet50, ResNet101
 from cleverhans.train import train
 from cleverhans.utils import AccuracyReport, set_log_level
 from cleverhans.utils_tf import model_eval, untargeted_advx_image_eval
@@ -71,17 +67,11 @@ def generate_adv_images(gpu, attack_algo, dataset, source_data_dir, train_start=
     # if (os.path.exists(output_dir + "/{0}_untargeted_train.npz".format(attack_algo)) and
     #     os.path.exists(output_dir + "/{0}_untargeted_test.npz".format(attack_algo))):
     #     return report
-
-
     # Object used to keep track of (and return) key accuracies
-
-
     # Set TF random seed to improve reproducibility
     tf.set_random_seed(1234)
-
     # Set logging level to see debug information
     set_log_level(logging.DEBUG)
-
     # Create TF session
     config_args = {}
     if num_threads:
@@ -95,12 +85,15 @@ def generate_adv_images(gpu, attack_algo, dataset, source_data_dir, train_start=
     elif dataset == "CIFAR100" or dataset == "CIFAR100_coarse_label":
         data = CIFAR100(data_dir=source_data_dir, dataset_name=dataset, train_start=train_start, train_end=train_end,
                        test_start=test_start, test_end=test_end)
-    elif dataset == "MNIST" or dataset == "F-MNIST":
+    elif dataset == "MNIST" or dataset == "FashionMNIST":
         data = MNIST(data_dir=source_data_dir, train_start=train_start, train_end=train_end, test_start=test_start,
                      test_end=test_end)
     elif dataset == "ImageNet":
-        data = MiniImageNet(data_dir=source_data_dir, train_start=train_start, train_end=train_end, test_start=test_start
-                            ,num_classes=CLASS_NUM["ImageNet"], arch=args.arch)
+        data = MiniImageNet(data_dir=source_data_dir, train_start=train_start, train_end=train_end, test_start=test_start,
+                            num_classes=CLASS_NUM["ImageNet"], arch=args.arch)
+    elif dataset == "TinyImageNet":
+        data = TinyImageNet(data_dir=source_data_dir, train_start=train_start, train_end=train_end, test_start=test_start,
+                            num_classes=CLASS_NUM["TinyImageNet"])
 
     dataset_size = data.x_train.shape[0]
     dataset_train = data.to_tensorflow()[0]
@@ -160,9 +153,9 @@ def generate_adv_images(gpu, attack_algo, dataset, source_data_dir, train_start=
         model = Shallow4ConvLayersConv(args.arch, IMG_SIZE[dataset], CLASS_NUM[dataset],
                                        in_channels=DATASET_INCHANNELS[args.dataset], dim_hidden=64)
         model.is_training = False
-    elif args.arch == "conv10":
-        model = Shallow10ConvLayersConv(args.arch, CLASS_NUM[dataset], nb_filters=64,
-                                        input_shape=[IMG_SIZE[dataset], IMG_SIZE[dataset], DATASET_INCHANNELS[args.dataset]])
+    # elif args.arch == "conv10":
+    #     model = Shallow10ConvLayersConv(args.arch, CLASS_NUM[dataset], nb_filters=64,
+    #                                     input_shape=[IMG_SIZE[dataset], IMG_SIZE[dataset], DATASET_INCHANNELS[args.dataset]])
     elif args.arch == "vgg16":
         model = VGG16("vgg_16", CLASS_NUM[dataset], [IMG_SIZE[dataset], IMG_SIZE[dataset], DATASET_INCHANNELS[args.dataset]])
         model.is_training = False
@@ -174,6 +167,8 @@ def generate_adv_images(gpu, attack_algo, dataset, source_data_dir, train_start=
         model = ResNet18(args.arch, CLASS_NUM[dataset], [IMG_SIZE[dataset], IMG_SIZE[dataset], DATASET_INCHANNELS[args.dataset]])
     elif args.arch == "resnet50":
         model = ResNet50(args.arch, CLASS_NUM[dataset], [IMG_SIZE[dataset], IMG_SIZE[dataset], DATASET_INCHANNELS[args.dataset]])
+    elif args.arch == "resnet101":
+        model = ResNet101(args.arch, CLASS_NUM[dataset], [IMG_SIZE[dataset], IMG_SIZE[dataset], DATASET_INCHANNELS[args.dataset]])
 
     def evaluate():
         if hasattr(model, "is_training"):
@@ -268,7 +263,6 @@ def main(argv=None):
     global BATCH_SIZE
     if FLAGS.batch_size != config.BATCH_SIZE:
         config.BATCH_SIZE = FLAGS.batch_size
-
     # if FLAGS.attack == "all":
     #     pool = mp.Pool(processes=len(META_ATTACKER_INDEX))
     #     for index, attack_type in enumerate(META_ATTACKER_INDEX):
@@ -301,6 +295,6 @@ if __name__ == '__main__':
                          'GPU for training')
     flags.DEFINE_enum("attack", "FGSM",
                       META_ATTACKER_INDEX, "the attack method")
-    flags.DEFINE_enum("dataset", "CIFAR10", ["CIFAR10", "CIFAR100", "CIFAR100_coarse_label","MNIST", "F-MNIST", "ImageNet","SVHN", "AWA2","CUB"], "the dataset we want to generate")
-    flags.DEFINE_enum("arch", "conv4", ["conv10","conv4", "vgg16","vgg16small", "resnet10", "resnet18", "resnet50"], "the network be used to generate adversarial examples")
+    flags.DEFINE_enum("dataset", "CIFAR10", ["CIFAR10", "CIFAR100", "TinyImageNet", "CIFAR100_coarse_label","MNIST", "FashionMNIST", "ImageNet","SVHN", "AWA2","CUB"], "the dataset we want to generate")
+    flags.DEFINE_enum("arch", "conv4", ["conv10","conv4", "vgg16","vgg16small", "resnet10", "resnet18", "resnet50", "resnet101"], "the network be used to generate adversarial examples")
     tf.app.run()

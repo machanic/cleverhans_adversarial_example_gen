@@ -22,9 +22,9 @@ MNIST_SOURCE_DATA_DIR = "{}/MNIST/".format(ROOT_DATA_DIR)
 MNIST_OUTPUT_DATA_DIR = "{}/MNIST/adversarial_images".format(ROOT_DATA_DIR)
 MNIST_MODEL_STORE_PATH = "{}/MNIST/tf_trained_model".format(ROOT_DATA_DIR)
 
-FMNIST_SOURCE_DATA_DIR = "{}/F-MNIST/".format(ROOT_DATA_DIR)
-FMNIST_OUTPUT_DATA_DIR = "{}/F-MNIST/adversarial_images".format(ROOT_DATA_DIR)
-FMNIST_MODEL_STORE_PATH = "{}/F-MNIST/tf_trained_model".format(ROOT_DATA_DIR)
+FMNIST_SOURCE_DATA_DIR = "{}/FashionMNIST/".format(ROOT_DATA_DIR)
+FMNIST_OUTPUT_DATA_DIR = "{}/FashionMNIST/adversarial_images".format(ROOT_DATA_DIR)
+FMNIST_MODEL_STORE_PATH = "{}/FashionMNIST/tf_trained_model".format(ROOT_DATA_DIR)
 
 SVHN_SOURCE_DATA_DIR = "{}/SVHN/".format(ROOT_DATA_DIR)
 SVHN_OUTPUT_DATA_DIR = "{}/SVHN/adversarial_images".format(ROOT_DATA_DIR)
@@ -44,31 +44,41 @@ CUB_OUTPUT_DATA_DIR = "{}/CUB200-2011/adversarial_images".format(ROOT_DATA_DIR)
 CUB_MODEL_STORE_PATH = "{}/CUB200-2011/tf_trained_model".format(ROOT_DATA_DIR)
 
 ILSVRC12_SOURCE_DATA_DIR = "{}/miniimagenet/new2/".format(ROOT_DATA_DIR)
-ILSVRC12_OUTPUT_DATA_DIR = "{}/miniimagenet/adversarial_images".format(ROOT_DATA_DIR)
+ILSVRC12_OUTPUT_DATA_DIR = "{}/miniimagenet/adversarial_images/".format(ROOT_DATA_DIR)
 ILSVRC12_MODEL_STORE_PATH = "{}/miniimagenet/tf_trained_model".format(ROOT_DATA_DIR)
-
 ILSVRC12_ROOT_DIR = "{}/miniimagenet/".format(ROOT_DATA_DIR)
+
+TINY_IMAGENET_SOURCE_DATA_DIR = "{}/tinyImageNet/tiny-imagenet-200/".format(ROOT_DATA_DIR)
+TINY_IMAGENET_OUTPUT_DATA_DIR = "{}/tinyImageNet/adversarial_images/".format(ROOT_DATA_DIR)
+TINY_IMAGENET_MODEL_STORE_PATH = "{}/tinyImageNet/tf_trained_model".format(ROOT_DATA_DIR)
 
 DATASET_ADV_OUTPUT = {"CIFAR10":CIFAR10_OUTPUT_DATA_DIR, "CIFAR100": CIFAR100_OUTPUT_DATA_DIR, "CIFAR100_coarse_label": CIFAR100_COARSE_LABEL_OUTPUT_DATA_DIR,
                       "SVHN":SVHN_OUTPUT_DATA_DIR,"MNIST":MNIST_OUTPUT_DATA_DIR,
-                      "F-MNIST":FMNIST_OUTPUT_DATA_DIR, "AWA2":AWA2_OUTPUT_DATA_DIR,
-                      "CUB":CUB_OUTPUT_DATA_DIR, "ImageNet":ILSVRC12_OUTPUT_DATA_DIR }
+                      "FashionMNIST":FMNIST_OUTPUT_DATA_DIR, "AWA2":AWA2_OUTPUT_DATA_DIR,
+                      "CUB":CUB_OUTPUT_DATA_DIR, "ImageNet":ILSVRC12_OUTPUT_DATA_DIR,
+                      "TinyImageNet": TINY_IMAGENET_OUTPUT_DATA_DIR}
 DATASET_SOURCE_PATH = {"CIFAR10":CIFAR10_SOURCE_DATA_DIR, "CIFAR100": CIFAR100_SOURCE_DATA_DIR, "CIFAR100_coarse_label": CIFAR100_SOURCE_DATA_DIR,
                        "SVHN":SVHN_SOURCE_DATA_DIR, "MNIST":MNIST_SOURCE_DATA_DIR,
-                       "F-MNIST":FMNIST_SOURCE_DATA_DIR, "AWA2":AWA2_SOURCE_DATA_DIR,
-                       "CUB":CUB_SOURCE_DATA_DIR, "ImageNet":ILSVRC12_SOURCE_DATA_DIR }
+                       "FashionMNIST":FMNIST_SOURCE_DATA_DIR, "AWA2":AWA2_SOURCE_DATA_DIR,
+                       "CUB":CUB_SOURCE_DATA_DIR, "ImageNet":ILSVRC12_SOURCE_DATA_DIR, "TinyImageNet": TINY_IMAGENET_SOURCE_DATA_DIR}
 TF_CLEAN_IMAGE_MODEL_PATH =  {"CIFAR10":CIFAR10_MODEL_STORE_PATH,  "CIFAR100":CIFAR100_MODEL_STORE_PATH,  "CIFAR100_coarse_label": CIFAR100_COARSE_LABEL_MODEL_STORE_PATH,
                               "SVHN":SVHN_MODEL_STORE_PATH,
-                              "MNIST":MNIST_MODEL_STORE_PATH,"F-MNIST":FMNIST_MODEL_STORE_PATH,
-                              "AWA2":AWA2_MODEL_STORE_PATH, "CUB":CUB_MODEL_STORE_PATH, "ImageNet": ILSVRC12_MODEL_STORE_PATH}
+                              "MNIST":MNIST_MODEL_STORE_PATH,"FashionMNIST":FMNIST_MODEL_STORE_PATH,
+                              "AWA2":AWA2_MODEL_STORE_PATH, "CUB":CUB_MODEL_STORE_PATH, "ImageNet": ILSVRC12_MODEL_STORE_PATH,
+                              "TinyImageNet":TINY_IMAGENET_MODEL_STORE_PATH}
 
-IMG_SIZE = {"CIFAR10": 32, "CIFAR100":32, "CIFAR100_coarse_label":32, "MNIST":28, "F-MNIST":28, "ImageNet": 224,"SVHN":32, "AWA2":224, "CUB":224}
-CLASS_NUM = {"CIFAR10": 10,"CIFAR100":100,"CIFAR100_coarse_label":20,  "MNIST":10, "F-MNIST":10, "ImageNet": 20, "SVHN": 10,"AWA2":len(AWA2_ALL_FOLDER), "CUB": 200}
-DATASET_INCHANNELS = {"CIFAR10": 3,"CIFAR100":3, "CIFAR100_coarse_label":3,"MNIST":1, "F-MNIST":1, "ImageNet":3, "SVHN":3, "AWA2":3,"CUB":3}
+IMG_SIZE = {"CIFAR10": 32, "CIFAR100":32, "CIFAR100_coarse_label":32,
+            "TinyImageNet": 64,
+            "MNIST":28, "FashionMNIST":28, "ImageNet": 224,"SVHN":32, "AWA2":224, "CUB":224}
+CLASS_NUM = {"CIFAR10": 10,"CIFAR100":100,"CIFAR100_coarse_label":20,  "MNIST":10, "FashionMNIST":10, "ImageNet": 20,
+             "TinyImageNet": 200,
+             "SVHN": 10,"AWA2":len(AWA2_ALL_FOLDER), "CUB": 200}
+DATASET_INCHANNELS = {"CIFAR10": 3,"CIFAR100":3, "TinyImageNet": 3,
+                      "CIFAR100_coarse_label":3,"MNIST":1, "FashionMNIST":1, "ImageNet":3, "SVHN":3, "AWA2":3,"CUB":3}
 
 # train config
 NB_FILTERS = 64
-NB_EPOCHS = 20
+NB_EPOCHS = 100
 BATCH_SIZE = 200
 CLEAN_TRAIN = True
 

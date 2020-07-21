@@ -12,7 +12,6 @@ import glob
 import re
 
 
-
 def chunk(xs, n):
     ys = list(xs)
     random.shuffle(ys)
@@ -24,7 +23,6 @@ def chunk(xs, n):
         else:
            extra= []
         yield ys[c*size:(c+1)*size] + extra
-
 
 
 def process_data(attack_name, data_json, output_root_dir):
@@ -39,7 +37,6 @@ def process_data(attack_name, data_json, output_root_dir):
         out_dir_name = output_root_dir + "/{}_{}".format(label, attack_index)
         support_dir = "{}/support".format(out_dir_name)
         query_dir = "{}/query".format(out_dir_name)
-        print(support_dir, query_dir)
         os.makedirs(support_dir, exist_ok=True)
         os.makedirs(query_dir, exist_ok=True)
         all_index = np.arange(len(adv_images_list))
@@ -60,6 +57,7 @@ def process_data(attack_name, data_json, output_root_dir):
 
         out_file_path = "{}/{}.npy".format(query_dir, "query")
         count_file_path = "{}/count.txt".format(query_dir)
+        print("write to {}".format(out_file_path))
         fp = np.memmap(out_file_path, dtype='float32', mode='w+', shape=query_images.shape)
         fp[:, :, :, :] = query_images[:, :, :, :]
         del fp
@@ -75,6 +73,8 @@ def split_test_PART_attack_type(npz_folder, detector):
         if npz_path.endswith(".npz"):
             ma = extract_pattern.match(npz_path)
             attack_name = ma.group(1)
+            if attack_name == "PGD":
+                attack_name = "PGD_L_infinity"
             dataset = ma.group(2)
             detector_name = ma.group(3)
             shot = ma.group(5)
@@ -90,7 +90,7 @@ def split_test_PART_attack_type(npz_folder, detector):
     for attack_name, data_json in collect_data.items():
         attack_name, shot = attack_name.split("#")
         if attack_name!="clean":
-            if detector == "MetaAdvDet":
+            if detector.startswith("MetaAdvDet"):
                 output_root = npz_folder + "/{}@shot_{}/II".format(attack_name, shot)
             else:
                 output_root = npz_folder + "/{}/II".format(attack_name)
@@ -99,39 +99,38 @@ def split_test_PART_attack_type(npz_folder, detector):
             process_data("clean", collect_data["clean#1"], output_root)
 
 def split_all_test():
-    data_root_dir = {"F-MNIST":FMNIST_OUTPUT_DATA_DIR,
+    data_root_dir = {"FashionMNIST":FMNIST_OUTPUT_DATA_DIR,
                      "MNIST":MNIST_OUTPUT_DATA_DIR, "CIFAR-10":CIFAR10_OUTPUT_DATA_DIR}
-    data_root_dir = {"SVHN": SVHN_OUTPUT_DATA_DIR}
     detectors = ["DNN", "MetaAdvDet", "NeuralFP", "RotateDet"]
-    detectors = ["RotateDet"]
+    detectors = ["MetaAdvDetAdvTrain"]
     for dataset, data_root in data_root_dir.items():
         for detector in detectors:
             out_root_dir = data_root + "/white_box@data_conv3@det_{}".format(detector)
-            split_test_PART_attack_type(out_root_dir,detector)
+            split_test_PART_attack_type(out_root_dir, detector)
             print("dataset:{} and detector:{} is done".format(dataset, detector))
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='PyTorch Meta_SGD Training')
+    parser = argparse.ArgumentParser(description='PyTorch white box partitioned data generator')
 
-    parser.add_argument("--dataset", type=str, default="CIFAR-10", choices=["CIFAR-10", "SVHN", "MNIST", "F-MNIST"],
+    parser.add_argument("--dataset", type=str, default="CIFAR-10",
                         help="the dataset to train")
-    parser.add_argument("--detector", default="DNN",type=str, choices=["DNN", "MetaAdvDet", "NeuralFP","RotateDet"])
-    parser.add_argument("--shot",default=1, type=int, choices=[1,5])
+    parser.add_argument("--detector", default="DNN",type=str, choices=["DNN", "MetaAdvDet", "MetaAdvDetAdvTrain", "NeuralFP","RotateDet"])
     args = parser.parse_args()
-    # dataset = args.dataset
-    # if dataset == "CIFAR-10":
-    #     out_root_dir = CIFAR10_OUTPUT_DATA_DIR
-    # elif dataset == "CIFAR-100":
-    #     out_root_dir = CIFAR100_OUTPUT_DATA_DIR
-    # elif dataset == "MNIST":
-    #     out_root_dir = MNIST_OUTPUT_DATA_DIR
-    # elif dataset == "F-MNIST":
-    #     out_root_dir = FMNIST_OUTPUT_DATA_DIR
-    # elif dataset == "SVHN":
-    #     out_root_dir = SVHN_OUTPUT_DATA_DIR
-    # out_root_dir = out_root_dir + "/white_box@data_conv3@det_{}".format(args.detector)
-    # assert os.path.exists(out_root_dir), "{} not exists!".format(out_root_dir)
-    # split_test_PART_attack_type(out_root_dir)
 
-    split_all_test()
+    dataset = args.dataset
+    if dataset == "CIFAR-10":
+        out_root_dir = CIFAR10_OUTPUT_DATA_DIR
+    elif dataset == "CIFAR-100":
+        out_root_dir = CIFAR100_OUTPUT_DATA_DIR
+    elif dataset == "MNIST":
+        out_root_dir = MNIST_OUTPUT_DATA_DIR
+    elif dataset == "FashionMNIST":
+        out_root_dir = FMNIST_OUTPUT_DATA_DIR
+    elif dataset == "SVHN":
+        out_root_dir = SVHN_OUTPUT_DATA_DIR
+    out_root_dir = out_root_dir + "/white_box@data_conv3@det_{}".format(args.detector)
+    assert os.path.exists(out_root_dir), "{} not exists!".format(out_root_dir)
+    split_test_PART_attack_type(out_root_dir, args.detector)
+
+    # split_all_test()
 

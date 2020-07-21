@@ -33,7 +33,7 @@ def recreate_image(x):
     return recreated_im
 
 
-def get_bad_file_list(root_dir, image_size=224, input_channels=3):
+def get_bad_file_list(root_dir, image_size=28, input_channels=1):
     for root, dirs, files in os.walk(root_dir,True):
         for filename in files:
             file_path = os.path.join(root, filename)
@@ -79,7 +79,10 @@ def get_bad_file_list(root_dir, image_size=224, input_channels=3):
                     print("write to {} len={}".format(npy_path, len(all_im)))
 
 
-get_bad_file_list("/home1/machen/dataset/miniimagenet/adversarial_images/resnet10/TRAIN_I_TEST_II/test/",image_size=224,input_channels=3)
+get_bad_file_list("/home1/machen/dataset/miniimagenet/adversarial_images/resnet18/TRAIN_I_TEST_II/test/",image_size=224,input_channels=3)
 # get_bad_file_list("/home1/machen/dataset/MNIST/adversarial_images/resnet18/TRAIN_I_TEST_II")
+# get_bad_file_list("/home1/machen/dataset/MNIST/adversarial_images/conv4/TRAIN_I_TEST_II/train")
+# get_bad_file_list("/home1/machen/dataset/MNIST/adversarial_images/resnet10/TRAIN_I_TEST_II")
+
 # get_bad_file_list("/home1/machen/dataset/F-MNIST/adversarial_images/resnet10/TRAIN_I_TEST_II")
 # get_bad_file_list("/home1/machen/dataset/F-MNIST/adversarial_images/resnet18/TRAIN_I_TEST_II")

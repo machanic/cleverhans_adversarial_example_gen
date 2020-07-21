@@ -2,8 +2,8 @@ import os
 import sys
 sys.path.append("/home1/machen/adversarial_example")
 import numpy as np
-orig_npz_dir = "/home1/machen/dataset/miniimagenet/adversarial_images/resnet10/npz"
-root_dir = "/home1/machen/dataset/miniimagenet/adversarial_images/resnet10"
+orig_npz_dir = "/home1/machen/dataset/miniimagenet/adversarial_images/resnet18/npz"
+root_dir = "/home1/machen/dataset/miniimagenet/adversarial_images/resnet18"
 for npz_file in os.listdir(orig_npz_dir):
 
     data = np.load(orig_npz_dir + "/" + npz_file)

@@ -81,6 +81,28 @@ class ResNet50(Model):
         return {self.O_LOGITS: logits,
                     self.O_PROBS: tf.nn.softmax(logits=logits)}
 
+
+class ResNet101(Model):
+    def __init__(self, scope, nb_classes, input_shape, **kwargs):
+        del kwargs
+        Model.__init__(self, scope, nb_classes, locals())
+        self.input_shape = input_shape
+        self.is_training = True
+        # Do a dummy run of fprop to create the variables from the start
+        self.dummpy_input = tf.placeholder(tf.float32, [FLAGS.batch_size] + input_shape)
+        self.fprop(self.dummpy_input)
+        # Put a reference to the params in self so that the params get pickled
+        self.params = self.get_params()
+
+    def fprop(self, x, **kwargs):
+        del kwargs
+        with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
+            logits = resnet_v2_101(x, self.nb_classes, is_training=self.is_training)
+            logits = tf.reshape(logits, shape=[-1, self.nb_classes])
+        return {self.O_LOGITS: logits,
+                    self.O_PROBS: tf.nn.softmax(logits=logits)}
+
+
 @add_arg_scope
 def bottleneck(inputs,
                depth,
@@ -320,12 +342,9 @@ def resnet_v2_50(inputs,
 
 
 def resnet_v2_101(inputs,
-                  num_classes=None,
+                  num_classes=None,global_pool=True,output_stride=None,
                   is_training=True,
-                  global_pool=True,
-                  output_stride=None,
-                  reuse=None,
-                  scope='resnet_v2_101'):
+                  ):
     """ResNet-101 model of [1]. See resnet_v2() for arg and return description."""
     blocks = [
         resnet_v2_block('block1', base_depth=64, num_units=3, stride=2,is_training=is_training),
